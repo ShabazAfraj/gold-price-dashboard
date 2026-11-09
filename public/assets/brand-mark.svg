@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Gold Ledger mark">
+  <rect width="64" height="64" rx="18" fill="#315C4C"/>
+  <path d="M16 43.5h32M20 38V26h7v12m5 0V18h7v20m5 0v-7h7v7" fill="none" stroke="#E9D8B0" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+  <circle cx="23.5" cy="22" r="2" fill="#C59B4A"/>
+</svg>
