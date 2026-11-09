@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f0efe6" />
+    <meta name="description" content="A personal gold-bar price journal: track Gold.de's lowest listed offers and compare retail EUR per gram with gold spot over time." />
+    <title>Gold Ledger — Bar prices against spot</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/brand-mark.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Gold Ledger home">
+        <img class="brand-mark" src="./assets/brand-mark.svg" alt="" width="40" height="40" />
+        <span class="brand-name"><strong>GOLD</strong><span>LEDGER</span></span>
+      </a>
+      <div class="header-meta">
+        <span class="status-pill" id="status-pill" data-state="loading">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="collector-status">Connecting to price history</span>
+        </span>
+        <time id="last-updated">Waiting for the latest capture</time>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="intro" aria-labelledby="page-title">
+        <div class="intro-copy">
+          <p class="eyebrow"><span class="eyebrow-rule"></span> A personal bullion price journal</p>
+          <h1 id="page-title">The price of a gram,<br /><em>in every size.</em></h1>
+          <p class="intro-text">A continuous record of the lowest listed Gold.de bar offers, measured against fine-gold spot in euros per gram.</p>
+        </div>
+        <div class="intro-note" aria-label="Tracking scope">
+          <span class="intro-note-number" id="tracked-size-range">01—00</span>
+          <span class="intro-note-label">standard sizes<br />from 1g to 1kg</span>
+          <span class="intro-note-line" aria-hidden="true"></span>
+          <span class="intro-note-small">History kept intact<br />New capture every hour</span>
+        </div>
+      </section>
+
+      <section class="metrics" aria-label="Latest market snapshot">
+        <article class="metric-card metric-spot">
+          <div class="metric-topline"><span class="metric-label">Fine-gold spot</span><span class="metric-index">01</span></div>
+          <p class="metric-value" id="spot-value">—</p>
+          <p class="metric-unit">EUR per gram</p>
+          <p class="metric-foot" id="spot-quoted-at">Quote time unavailable</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-topline"><label class="metric-label" for="history-weight-select">Retail bar price</label><span class="metric-index">02</span></div>
+          <p class="metric-value" id="retail-value">—</p>
+          <p class="metric-unit" id="retail-size-label">Selected denomination</p>
+          <p class="metric-foot" id="retail-per-gram">Retail €/g —</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-topline"><span class="metric-label">Retail premium</span><span class="metric-index">03</span></div>
+          <p class="metric-value" id="premium-value">—</p>
+          <p class="metric-unit" id="premium-percent">Difference vs spot</p>
+          <p class="metric-foot" id="premium-size-label">For selected denomination</p>
+        </article>
+        <article class="metric-card metric-capture">
+          <div class="metric-topline"><span class="metric-label">History preserved</span><span class="metric-index">04</span></div>
+          <p class="metric-value" id="observation-count">—</p>
+          <p class="metric-unit">denomination captures</p>
+          <p class="metric-foot" id="tracked-size-count">Across all tracked bar sizes</p>
+        </article>
+      </section>
+
+      <section class="panel history-panel" aria-labelledby="history-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">01 / Change over time</p>
+            <h2 id="history-heading">Retail against spot</h2>
+            <p class="section-description">Retail series use each bar’s calculated €/g price. Choose sizes to compare; spot remains in view.</p>
+          </div>
+          <button class="button button-outline" id="download-csv" type="button">
+            <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 2v10m0 0 3.5-3.5M10 12 6.5 8.5M3 14.5v2h14v-2" /></svg>
+            Download full history
+          </button>
+        </div>
+
+        <div class="chart-controls">
+          <div class="control-group">
+            <span class="control-label" id="series-label">Retail series</span>
+            <div class="weight-chips" id="weight-chips" role="group" aria-labelledby="series-label"></div>
+          </div>
+          <div class="range-control" id="range-control" role="group" aria-label="Chart date range">
+            <button type="button" class="range-button" data-range="1">1D</button>
+            <button type="button" class="range-button" data-range="7">7D</button>
+            <button type="button" class="range-button is-active" data-range="30" aria-pressed="true">30D</button>
+            <button type="button" class="range-button" data-range="90">90D</button>
+            <button type="button" class="range-button" data-range="all">ALL</button>
+          </div>
+        </div>
+
+        <div class="chart-caption-row">
+          <p id="chart-summary">Preparing price series…</p>
+          <p class="chart-unit">EUR / g</p>
+        </div>
+        <div class="chart-frame">
+          <svg id="price-chart" viewBox="0 0 1000 360" role="img" aria-label="Historical chart comparing selected gold-bar retail prices per gram with gold spot price"></svg>
+          <p class="chart-empty" id="chart-empty" hidden>No price observations are available for this range.</p>
+        </div>
+        <div class="chart-legend" id="chart-legend" aria-label="Chart legend"></div>
+        <p class="chart-note" id="chart-note">Legacy observations include retail prices only; the earlier tracker did not capture spot.</p>
+      </section>
+
+      <section class="panel offers-panel" aria-labelledby="offers-heading">
+        <div class="panel-heading compact-heading">
+          <div>
+            <p class="section-kicker">02 / The current shelf</p>
+            <h2 id="offers-heading">Bar sizes at a glance</h2>
+            <p class="section-description">Lowest displayed offer for each standard Gold.de denomination currently tracked.</p>
+          </div>
+          <span class="source-stamp" id="offers-captured-at">Latest capture —</span>
+        </div>
+        <div class="offer-grid" id="offer-grid" aria-live="polite"></div>
+        <p class="fine-print">Listed prices may exclude shipping and can change before purchase. “No offer” means the source category had no current listing.</p>
+      </section>
+
+      <section class="panel ledger-panel" aria-labelledby="ledger-heading">
+        <div class="panel-heading compact-heading ledger-heading-row">
+          <div>
+            <p class="section-kicker">03 / The ledger</p>
+            <h2 id="ledger-heading">Captured observations</h2>
+            <p class="section-description">Browse individual captures by bar size. The download includes the complete dataset for every tracked denomination.</p>
+          </div>
+          <label class="select-wrap" for="history-weight-select">
+            <span>Show history for</span>
+            <select id="history-weight-select" aria-label="Select a bar size for captured observations"></select>
+          </label>
+        </div>
+        <div class="table-scroll">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th scope="col">Captured</th>
+                <th scope="col">Lowest bar price</th>
+                <th scope="col">Retail €/g</th>
+                <th scope="col">Spot €/g</th>
+                <th scope="col">Premium / g</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body"></tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <p id="history-row-count">Loading observations…</p>
+          <button class="button button-text" id="show-earlier" type="button" hidden>Show earlier captures</button>
+        </div>
+      </section>
+
+      <section class="source-note" aria-labelledby="source-heading">
+        <div class="source-note-mark" aria-hidden="true">GL</div>
+        <div>
+          <p class="section-kicker">Notes on the numbers</p>
+          <h2 id="source-heading">One reference, two price measures.</h2>
+          <p>Retail prices are the lowest “from” offers shown by <a href="https://www.gold.de/kaufen/goldbarren/" target="_blank" rel="noopener noreferrer">Gold.de’s bar comparison</a>. The fine-gold spot quote is captured from <a href="https://www.gold.de/kurse/goldpreis/" target="_blank" rel="noopener noreferrer">Gold.de’s market-price page</a>. Legacy 20g, 50g, and 100g retail history is preserved; spot was not recorded by the earlier tracker, so no past spot values are invented.</p>
+          <p class="disclaimer">A personal price reference only. Not investment advice or a guaranteed checkout price.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="footer-brand" href="./">GOLD LEDGER</a>
+      <span>Built for the long view.</span>
+      <span id="data-source-status">Reading the public history file</span>
+    </footer>
+
+    <noscript><p class="noscript">JavaScript is needed to draw the price history and load the collected observations.</p></noscript>
+  </body>
+</html>
