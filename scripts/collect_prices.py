@@ -55,6 +55,13 @@ SPOT_HEADER_RE = re.compile(
     re.IGNORECASE,
 )
 
+REQUIRED_STANDARD_DENOMINATIONS = frozenset(
+    {
+        "1 g", "2 g", "2.5 g", "5 g", "10 g", "20 g", "25 g",
+        "1/2 oz", "1 oz", "50 g", "100 g", "250 g", "500 g", "1 kg",
+    }
+)
+
 
 def normalized_text(value: str) -> str:
     return " ".join(value.replace("\xa0", " ").replace("\u202f", " ").split())
@@ -201,7 +208,7 @@ def parse_spot(html: str, captured_at: datetime) -> tuple[Decimal, str]:
         re.IGNORECASE,
     )
     time_match = re.search(r"Stand:\s*(\d{2}:\d{2})(?::\d{2})?\s*Uhr", text)
-    quote_at = captured_at
+    quote_at: datetime | None = None
     if date_match and time_match:
         try:
             local_time = datetime.strptime(
@@ -216,7 +223,7 @@ def parse_spot(html: str, captured_at: datetime) -> tuple[Decimal, str]:
 
     if spot <= 0:
         raise ValueError("Spot price must be positive")
-    return spot, quote_at.isoformat(timespec="seconds")
+    return spot, quote_at.isoformat(timespec="seconds") if quote_at else ""
 
 
 def make_session() -> requests.Session:
@@ -241,16 +248,28 @@ def make_session() -> requests.Session:
     return session
 
 
+def validate_catalog(catalog: list[CatalogItem]) -> None:
+    observed = {item["denomination"] for item in catalog}
+    missing = sorted(REQUIRED_STANDARD_DENOMINATIONS - observed)
+    if missing:
+        raise RuntimeError(
+            "Gold.de category list is missing expected standard denominations: "
+            f"{', '.join(missing)}. No partial snapshot was saved."
+        )
+
+    priced = [item for item in catalog if item["price"] is not None]
+    if len(priced) < 6:
+        raise RuntimeError(
+            f"Only found {len(priced)} priced denominations; the page structure may "
+            "have changed, so no partial snapshot was saved."
+        )
+
+
 def fetch_inputs(session: requests.Session) -> tuple[list[CatalogItem], Decimal, str]:
     catalog_response = session.get(BAR_LIST_URL, timeout=25)
     catalog_response.raise_for_status()
     catalog = parse_catalog(catalog_response.text)
-    priced = [item for item in catalog if item["price"] is not None]
-    if len(catalog) < 8 or len(priced) < 6:
-        raise RuntimeError(
-            f"Only found {len(catalog)} bar denominations ({len(priced)} with prices); "
-            "the page structure may have changed, so no partial snapshot was saved."
-        )
+    validate_catalog(catalog)
 
     spot_response = session.get(SPOT_URL, timeout=25)
     spot_response.raise_for_status()
