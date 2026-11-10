@@ -26,7 +26,7 @@ python -m unittest discover -s tests
 python -m http.server 3000 --directory public
 ```
 
-The scheduled GitHub Actions workflow runs once per hour and can also be started manually from the Actions tab. The GitHub Pages workflow publishes the `public/` dashboard assets whenever `main` changes. A collection failure stops the run without appending a partial or malformed snapshot.
+The scheduled GitHub Actions workflow runs once per hour and can also be started manually from the Actions tab. The GitHub Pages workflow publishes the `public/` dashboard assets whenever `main` changes and after each successful collection, keeping the packaged history current. A collection failure stops the run without appending a partial or malformed snapshot.
 
 ## Data sources
 
