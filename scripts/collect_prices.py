@@ -397,7 +397,7 @@ def collect(history_path: Path = HISTORY_PATH, legacy_path: Path = LEGACY_PATH) 
     migrated = migrate_legacy_rows(legacy_path) if first_write else []
 
     with history_path.open("a", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=FIELDNAMES)
+        writer = csv.DictWriter(handle, fieldnames=FIELDNAMES, lineterminator="\n")
         if first_write:
             writer.writeheader()
             writer.writerows(migrated)
