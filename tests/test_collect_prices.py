@@ -6,11 +6,13 @@ from decimal import Decimal
 from pathlib import Path
 
 from scripts.collect_prices import (
+    REQUIRED_STANDARD_DENOMINATIONS,
     parse_catalog,
     parse_euro_amount,
     parse_spot,
     parse_weight_slug,
     migrate_legacy_rows,
+    validate_catalog,
 )
 
 
@@ -29,6 +31,20 @@ class CollectorParsingTests(unittest.TestCase):
         self.assertAlmostEqual(float(one_ounce[0]), 31.1034768)
         self.assertEqual(parse_weight_slug("1kg"), (Decimal("1000"), "1 kg"))
         self.assertIsNone(parse_weight_slug("geschenkbarren"))
+
+    def test_catalog_validation_rejects_a_partial_list_with_many_valid_rows(self):
+        catalog = [
+            {
+                "weight_g": Decimal("1"),
+                "denomination": denomination,
+                "price": Decimal("100.00"),
+                "availability": "available",
+                "offer_url": "https://www.gold.de/kaufen/goldbarren/",
+            }
+            for denomination in sorted(REQUIRED_STANDARD_DENOMINATIONS)
+        ]
+        with self.assertRaisesRegex(RuntimeError, "missing expected standard denominations"):
+            validate_catalog(catalog[:-1])
 
     def test_catalog_uses_lowest_price_and_limits_weight_range(self):
         html = """
@@ -60,6 +76,13 @@ class CollectorParsingTests(unittest.TestCase):
         spot, quote_at = parse_spot(html, captured)
         self.assertEqual(spot, Decimal("118.67"))
         self.assertEqual(quote_at, "2026-11-09T23:30:00+00:00")
+
+    def test_spot_parser_leaves_quote_time_blank_when_source_does_not_show_one(self):
+        html = "<p>GOLD 4.142,83 $/oz 3.691,15 €/oz 118,67 €/g</p>"
+        captured = datetime(2026, 11, 9, 23, 31, tzinfo=timezone.utc)
+        spot, quote_at = parse_spot(html, captured)
+        self.assertEqual(spot, Decimal("118.67"))
+        self.assertEqual(quote_at, "")
 
     def test_legacy_migration_preserves_each_old_weight_and_leaves_spot_unknown(self):
         with tempfile.TemporaryDirectory() as temp_dir:
