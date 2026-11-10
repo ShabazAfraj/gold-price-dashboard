@@ -2,6 +2,8 @@
 
 Personal dashboard for gold bar price history, retail EUR/g comparisons, and EUR spot price.
 
+**Live dashboard:** [Gold Ledger](https://shabazafraj.github.io/gold-price-dashboard/).
+
 ## Dashboard
 
 A responsive, public dashboard for the lowest listed Gold.de gold-bar prices from 1g to 1000g, compared with the EUR fine-gold spot price per gram. The page provides denomination cards, selectable retail €/g chart series, a full capture ledger, and CSV export.
@@ -24,7 +26,7 @@ python -m unittest discover -s tests
 python -m http.server 3000 --directory public
 ```
 
-The scheduled GitHub Actions workflow runs once per hour and can also be started manually from the Actions tab. A collection failure stops the run without appending a partial or malformed snapshot.
+The scheduled GitHub Actions workflow runs once per hour and can also be started manually from the Actions tab. The GitHub Pages workflow publishes the `public/` dashboard assets whenever `main` changes. A collection failure stops the run without appending a partial or malformed snapshot.
 
 ## Data sources
 
