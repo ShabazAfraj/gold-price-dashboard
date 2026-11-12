@@ -2,10 +2,6 @@ name: Collect gold bar prices
 
 on:
 
-  schedule:
-  
-    - cron: "23 * * * *"
-    
   workflow_dispatch:
   
 permissions:
@@ -72,8 +68,6 @@ jobs:
             
           fi
           
-
-
 
 
 
